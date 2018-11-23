@@ -40,38 +40,30 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
     let URLBASE = "https://quiz2019.herokuapp.com/api"
     let MY_TOKEN = "08377e567fee7be1ec10"
     
-    var items = [Item]()
-    var quizzes = [Quiz]()
-    var imagesCache = [String:UIImage]()
+    var items = [Item]() // Array donde se almacenan las respuestas del servidor
+    var quizzes = [Quiz]() // Array con los quizzes
+    var imagesCache = [String:UIImage]() // Caché de imágenes
     
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         let urlString = "\(URLBASE)/quizzes?token=\(MY_TOKEN)"
-        download(urlStr: urlString)
+        download(urlStr: urlString) // Comienza la descarga de los datos
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
         return 1
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
         return quizzes.count
     }
 
@@ -79,6 +71,7 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "quiz cell", for: indexPath) as! QuizzesTableViewCell
         
+        // Este ViewController será el delegado de la celda
         cell.delegate = self
         
         let quiz = quizzes[indexPath.row]
@@ -93,6 +86,7 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
         if let img = imagesCache[quiz.attachment.url] {
             cell.pictureImageView.image = img
         } else {
+            // Si la imagen no está en caché, se pone una temporal y se descarga
             cell.pictureImageView.image = UIImage(named: "none")
             downloadPicture(imgUrl: quiz.attachment.url, indexPath: indexPath)
         }
@@ -103,46 +97,10 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
             cell.favButton.setImage(UIImage(named: "nofav"), for: .normal)
         }
         
-        
         return cell
     }
     
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-    
+    // Función que descarga los datos del servidor, extrae los quizzes y los guarda en su array
     func download(urlStr: String) {
         if let url = URL(string: urlStr){
             DispatchQueue.global().async {
@@ -156,17 +114,20 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
                         DispatchQueue.main.async {
                             self.items.append(item)
                         }
+                        
+                        // Si hay más páginas también las descargamos
                         if !item.nextUrl.isEmpty {
                             self.downloadNextItems(itemUrl: item.nextUrl)
                         }
                         DispatchQueue.main.async {
                             UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                            // Extraemos los quizzes de los datos descargados y los guardamos en su array
                             for itm in self.items{
                                 for qz in itm.quizzes{
                                     self.quizzes.append(qz)
-                                    self.tableView.reloadData()
                                 }
                             }
+                            self.tableView.reloadData() // Recargamos la tabla cuando ya tengamos todos los quizzes
                         }
                         
                     }
@@ -177,6 +138,7 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
         }
     }
     
+    // Función recursiva que sigue descargando y guardando datos hasta que se acaban las páginas
     func downloadNextItems(itemUrl: String) {
         if let url = URL(string: itemUrl) {
             if let data = try? Data(contentsOf: url) {
@@ -186,6 +148,7 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
                     DispatchQueue.main.async {
                         self.items.append(item)
                     }
+                    // Si quedan páginas por descargar volvemos a llamar a la función
                     if !item.nextUrl.isEmpty {
                         self.downloadNextItems(itemUrl: item.nextUrl)
                     }
@@ -194,6 +157,7 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
         }
     }
     
+    // Función que descarga una foto y la guarda en la caché
     func downloadPicture(imgUrl: String, indexPath: IndexPath) {
         //guard let escapedUrl = imgUrl.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {print("fallo")}
         DispatchQueue.global().async {
@@ -216,6 +180,7 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
         }
     }
     
+    // Función que se encarga de marcar y desmarcar los favoritos
     func setFavourite(cell: QuizzesTableViewCell) {
         guard let indexPath = self.tableView.indexPath(for: cell) else {
             // No debería fallar nunca, el usuario va a hacer tap en una cell que no esta en la pantalla?
