@@ -51,7 +51,7 @@ class QuizViewController: UIViewController, UITextFieldDelegate {
     // respuesta es correcta cuando pulsamos el botón "Comprobar"
     @IBAction func checkAnswer(_ sender: UIButton) {
         let URLBASE = "https://quiz2019.herokuapp.com/api"
-        let MY_TOKEN = "08377e567fee7be1ec10"
+        let MY_TOKEN = "134e3ab7c723cb9956cf"
         
         let userAnswer = answerTextField.text // Respuesta que el usuario ha introducido en el TextField
         

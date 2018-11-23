@@ -19,7 +19,7 @@ struct Quiz: Codable {
     let question: String
     let author: Author?
     let attachment: Attachment
-    let favourite: Bool
+    var favourite: Bool
     let tips: [String]
 }
 
@@ -38,7 +38,7 @@ struct Attachment: Codable {
 class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDelegate {
    
     let URLBASE = "https://quiz2019.herokuapp.com/api"
-    let MY_TOKEN = "08377e567fee7be1ec10"
+    let MY_TOKEN = "134e3ab7c723cb9956cf"
     
     var items = [Item]() // Array donde se almacenan las respuestas del servidor
     var quizzes = [Quiz]() // Array con los quizzes
@@ -231,12 +231,17 @@ class QuizzesTableViewController: UITableViewController, QuizzesTableViewCellDel
                 }
                 
                 // Cambiamos la imagen del boton (también se podría descargar el quiz actualizado)
+                self.quizzes[indexPath.row].favourite = !isFav
                 DispatchQueue.main.async {
+                    
                     if isFav {
+                    
                         cell.favButton.setImage(UIImage(named: "nofav"), for: .normal)
+                        
                     } else {
                         cell.favButton.setImage(UIImage(named: "fav"), for: .normal)
                     }
+                
                 }
                 print("Favorito modificado correctamente!")
             }
